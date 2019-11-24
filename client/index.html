@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="WebRTC code samples">
+  <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1, maximum-scale=1">
+  <meta itemprop="description" content="Client-side WebRTC code samples">
+  <meta itemprop="image" content="../../../images/webrtc-icon-192x192.png">
+  <meta itemprop="name" content="WebRTC code samples">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta id="theme-color" name="theme-color" content="#ffffff">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+  <link rel="stylesheet" href="index.css">
+
+</head>
+
+<body>
+
+  <main role="main" class="container text-center">
+    <h1 class="jumbotron-heading">Face Search</h1>
+    <div class="camera-allowed">
+      <div class="row justify-content-md-center"><video id="video" autoplay style="width:400px;height:300px;"></video></div>
+      <div class="row justify-content-md-center buttons">
+        <a href="#" id="captureBtn" class="btn btn-primary mb-2">Recognize</a>
+        <form class="form-inline mx-sm-3 add-face">
+          <div class="form-group mb-2 mx-sm-1">
+          <input type="text" class="form-control" id="faceName" placeholder="Face Name" size="15" required>
+          </div>
+          <div class="form-group mb-2">
+          <button id="addFaceBtn" type="submit" class="btn btn-success">Add Face</button>
+          </div>
+        </form>
+      </div>
+      <div class="row bg-light py-4">
+        <div class="col">
+          <div id="screenshotTitle"><p>Captured Image</p></div>
+          <canvas id="myCanvas" style="width:400px;height:300px;"></canvas>
+        </div>
+        <div class="col">
+          <div id="response">Result</div>
+          <canvas id="matchedCanvas" style="width:400px;height:300px;">
+        </div>
+      </div>
+    </div>
+  </main>
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.578.0.min.js"></script>
+  <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+  <script src="webcam.js"></script>
+</body>
+
+</html>
+
