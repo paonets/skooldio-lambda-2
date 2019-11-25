@@ -39,3 +39,8 @@ footer p {
 .buttons {
   padding: 10px;
 }
+
+.dropzone .dz-preview .dz-image {
+  width: 300px;
+  height: 300px;
+}

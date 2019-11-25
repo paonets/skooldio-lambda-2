@@ -1,29 +1,41 @@
 var express = require('express')
 var bodyParser = require('body-parser')
+var cors = require('cors')
 var AWS = require('aws-sdk');
 
 const rekognitionCollectionID = 'skooldio'
+const defaultS3bucket = 'skooldio-face-search'
+const tableName = 'skooldio-face-search'
 
 var app = express()
 // parse application/json
 app.use(bodyParser.json())
+// parse application/xwww-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Enable all CORS requests
+app.use(cors())
 
 //config for region
 AWS.config.update({
 	region: 'ap-southeast-1',
 });
+
 var rekognition = new AWS.Rekognition({apiVersion: '2016-06-27'})
+var s3 = new AWS.S3()
+var docClient = new AWS.DynamoDB.DocumentClient();
 
 // Index Face
 app.post('/face', function(req, res) {
-  var s3bucket = req.body.s3bucket || process.env.S3_BUCKET
+  var s3bucket = process.env.S3_BUCKET || defaultS3bucket
   var s3path = req.body.s3path
   var name = req.body.name
 
   console.log(`Indexing face image s3://${s3bucket}/${s3path} to collection ${rekognitionCollectionID}`)
   var indexParams = {
     CollectionId: rekognitionCollectionID,
-    ExternalImageId: name, 
+    DetectionAttributes: ["ALL"], 
+    ExternalImageId: s3path, 
     Image: {
       S3Object: {
         Bucket: s3bucket, 
@@ -34,17 +46,33 @@ app.post('/face', function(req, res) {
   rekognition.indexFaces(indexParams, function(error, response) {
     if (error) {
       console.log(error, error.stack) // an error occurred
-      res.status(500).json(error)
+      res.status(500).json({error: error})
     }
-    else {
-      res.json(response)
+    else if (response.FaceRecords.length <= 0) {
+      res.json({rekognition: response, imageURL:`https://${s3bucket}.s3-ap-southeast-1.amazonaws.com/${s3path}`})
+    } else {
+      // Save name in table
+      var params = {
+        TableName :tableName,
+        Item:{
+            "id": response.FaceRecords[0].Face.ExternalImageId,
+            "name": name
+        }
+      }
+      docClient.put(params, function(err, data) {
+        if (err) {
+          res.status(500).json({error: error})
+        } else {
+          res.json({rekognition: response, imageURL:`https://${s3bucket}.s3-ap-southeast-1.amazonaws.com/${s3path}`})
+        }
+      });
     }
   })
 })
 
 // Search Face
 app.get('/face', function(req, res) {
-  var s3bucket = req.query.s3bucket || process.env.S3_BUCKET
+  var s3bucket = process.env.S3_BUCKET || defaultS3bucket
   var s3path = req.query.s3path
 
   console.log(`Searching faces by image s3://${s3bucket}/${s3path} in collection ${rekognitionCollectionID}`)
@@ -52,17 +80,61 @@ app.get('/face', function(req, res) {
     CollectionId: rekognitionCollectionID,
     Image: {
       S3Object: {
-        Bucket: s3bucket, 
+        Bucket: s3bucket,
         Name: s3path
       }
-    }
+    },
+    MaxFaces: 1
   }
   rekognition.searchFacesByImage(searchParams, function(error, response) {
     if (error) {
       console.log(error, error.stack) // an error occurred
-      res.status(500).json(error)
+      res.status(500).json({error: error})
+    } else if (response.FaceMatches.length <= 0) {
+      res.json({rekognition: response})
     } else {
-      res.json(response)
+      // Construct image urls
+      var extImageID = response.FaceMatches[0].Face.ExternalImageId
+      var imageURL = `https://${s3bucket}.s3-ap-southeast-1.amazonaws.com/${extImageID}`
+
+      // Lookup names from dynamoDB table
+      var params = {
+        TableName: tableName,
+        Key:{ "id": extImageID }
+      };
+      docClient.get(params, function(err, data) {
+        if (err) {
+          res.status(500).json({error: error})
+        } else {
+          console.log(data)
+          var name = (data && data.Item) ? data.Item.name : ''
+          res.json({rekognition: response, imageURL: imageURL, name: name})
+        }
+      });
+    }
+  })
+})
+
+// S3 Signed URL for upload
+app.get('/presignedUploadURL', function(req, res) {
+  var s3bucket = process.env.S3_BUCKET || defaultS3bucket
+  var fileName = Date.now() + '_' + req.query.fileName
+
+  console.log(`Getting signed URL for upload to s3 bucket ${s3bucket}`)
+
+  var params = { 
+      Bucket: s3bucket, 
+      Key: fileName, 
+      Expires: 120,
+      ContentType: req.query.fileType,
+      ACL: 'public-read'
+  };
+  url = s3.getSignedUrl('putObject', params, function (err, url) {
+    if(err){
+      console.log('Error getting S3 pre-signed URL', err);
+      res.json({ success: false, message: err});
+    } else {
+      res.json({ success : true, signedURL : url, fileName: fileName });
     }
   })
 })
