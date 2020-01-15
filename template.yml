@@ -67,14 +67,7 @@ Resources:
                 Rules:
                   - Name: suffix
                     Value: .jpg
-      EventInvokeConfig:
-        MaximumRetryAttempts: 0
-        DestinationConfig:
-          # SQS and SNS will get auto-created if the Destination property is not specified or is AWS::NoValue
-          OnSuccess:
-            Type: SNS
-          OnFailure: 
-            Type: SNS
+      # TODO: For Lambda Destinations, add EventInvokeConfig here
   FaceImageBucket:
     Type: AWS::S3::Bucket
     Properties:
