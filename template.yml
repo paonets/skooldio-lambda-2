@@ -44,30 +44,8 @@ Resources:
           Properties:
             Path: /upload
             Method: get
-  FaceDetectS3:
-    Type: AWS::Serverless::Function
-    Properties:
-      Handler: s3/lambda.handler
-      CodeUri: .
-      Policies:
-        - AWSLambdaBasicExecutionRole
-        - S3CrudPolicy:
-            BucketName: !Sub "face-image-bucket-${AWS::AccountId}"
-        - RekognitionDetectOnlyPolicy: {}
-      Events:
-        S3ObjectCreateEvent:
-          Type: S3
-          Properties:
-            Bucket:
-              Ref: FaceImageBucket
-            Events:
-              - 's3:ObjectCreated:*'
-            Filter:
-              S3Key:
-                Rules:
-                  - Name: suffix
-                    Value: .jpg
-      # TODO: For Lambda Destinations, add EventInvokeConfig here
+  # TODO: Add FaceDetectS3 function definition here
+          
   FaceImageBucket:
     Type: AWS::S3::Bucket
     Properties:
