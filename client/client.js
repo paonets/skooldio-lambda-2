@@ -27,7 +27,7 @@ $(function() {
 			};
 			console.log('getting S3 presignedUploadURL', params);
 			//path to S3 signature 
-			$.getJSON(API_HOST + '/presignedUploadURL', params).done(function(data) {
+			$.getJSON(API_HOST + '/upload', params).done(function(data) {
 				console.log('presignedUploadURL', data);
 	
 				if (!data.signedURL) {
@@ -94,7 +94,7 @@ $(function() {
 				);
 				ctx.stroke();
 				var faceMatch = res.rekognition.FaceMatches[0]
-				$('#response').empty().append("<p>Matched " + res.name + " (Similarity: " + faceMatch.Similarity.toFixed(2) + "%) " + ((t1 - t0)/1000).toFixed(2) +  "s </p>")
+				$('#response').empty().append("<p>Matched with similarity: " + faceMatch.Similarity.toFixed(2) + "% in " + ((t1 - t0)/1000).toFixed(2) +  "s </p>")
 				var img = new Image();
 				img.onload = function () {
 					canvas.width = img.width;
@@ -133,8 +133,7 @@ $(function() {
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 		$('#response').empty().append("Adding...")
 		var params = {
-			s3path: currentFile.fileName, 
-			name: $("#faceName").val()
+			s3path: currentFile.fileName
 		}
 		$.post(API_HOST + '/face', params, 'json').done(function(res) {
 			console.log(res);

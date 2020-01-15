@@ -5,7 +5,6 @@ var AWS = require('aws-sdk');
 
 const rekognitionCollectionID = 'skooldio'
 const defaultS3bucket = 'skooldio-face-search'
-const tableName = 'skooldio-face-search'
 
 var app = express()
 // parse application/json
@@ -23,7 +22,6 @@ AWS.config.update({
 
 var rekognition = new AWS.Rekognition({apiVersion: '2016-06-27'})
 var s3 = new AWS.S3()
-var docClient = new AWS.DynamoDB.DocumentClient();
 
 // Index Face
 app.post('/face', function(req, res) {
@@ -49,23 +47,9 @@ app.post('/face', function(req, res) {
       res.status(500).json({error: error})
     }
     else if (response.FaceRecords.length <= 0) {
-      res.json({rekognition: response, imageURL:`https://${s3bucket}.s3-ap-southeast-1.amazonaws.com/${s3path}`})
+      res.json({rekognition: response, imageURL:null})
     } else {
-      // Save name in table
-      var params = {
-        TableName :tableName,
-        Item:{
-            "id": response.FaceRecords[0].Face.ExternalImageId,
-            "name": name
-        }
-      }
-      docClient.put(params, function(err, data) {
-        if (err) {
-          res.status(500).json({error: error})
-        } else {
-          res.json({rekognition: response, imageURL:`https://${s3bucket}.s3-ap-southeast-1.amazonaws.com/${s3path}`})
-        }
-      });
+      res.json({rekognition: response, imageURL:`https://${s3bucket}.s3-ap-southeast-1.amazonaws.com/${s3path}`})
     }
   })
 })
@@ -96,27 +80,13 @@ app.get('/face', function(req, res) {
       // Construct image urls
       var extImageID = response.FaceMatches[0].Face.ExternalImageId
       var imageURL = `https://${s3bucket}.s3-ap-southeast-1.amazonaws.com/${extImageID}`
-
-      // Lookup names from dynamoDB table
-      var params = {
-        TableName: tableName,
-        Key:{ "id": extImageID }
-      };
-      docClient.get(params, function(err, data) {
-        if (err) {
-          res.status(500).json({error: error})
-        } else {
-          console.log(data)
-          var name = (data && data.Item) ? data.Item.name : ''
-          res.json({rekognition: response, imageURL: imageURL, name: name})
-        }
-      });
+      res.json({rekognition: response, imageURL: imageURL})
     }
   })
 })
 
 // S3 Signed URL for upload
-app.get('/presignedUploadURL', function(req, res) {
+app.get('/upload', function(req, res) {
   var s3bucket = process.env.S3_BUCKET || defaultS3bucket
   var fileName = Date.now() + '_' + req.query.fileName
 
