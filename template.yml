@@ -15,36 +15,16 @@ Resources:
   FaceSearchApi:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: api/lambda.handler
-      CodeUri: .
+      Handler: # TODO: Add handler 
+      CodeUri: # TODO: Add CodeUri
       Environment:
         Variables:
           S3_BUCKET: !Sub "face-image-bucket-${AWS::AccountId}"
       Policies:
         - AWSLambdaBasicExecutionRole
-        - S3CrudPolicy:
-            BucketName: !Sub "face-image-bucket-${AWS::AccountId}"
-        - RekognitionReadPolicy:
-            CollectionId: skooldio
-        - RekognitionWriteOnlyAccessPolicy:
-            CollectionId: skooldio
+        # TODO: Add more policies
       Events:
-        FaceGetEvent:
-          Type: Api
-          Properties:
-            Path: /face
-            Method: get
-        FacePostEvent:
-          Type: Api
-          Properties:
-            Path: /face
-            Method: post
-        UploadPreSign:
-          Type: Api
-          Properties:
-            Path: /upload
-            Method: get
-  # TODO: Add FaceDetectS3 function definition here
+        # TODO: Add more events
           
   FaceImageBucket:
     Type: AWS::S3::Bucket
