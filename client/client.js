@@ -1,6 +1,6 @@
 
 
-const API_HOST = 'http://localhost:3001'
+const API_HOST = 'https://g5w63k4j74.execute-api.ap-southeast-1.amazonaws.com/Prod'// 'http://localhost:3001'
 
 Dropzone.autoDiscover = false
 

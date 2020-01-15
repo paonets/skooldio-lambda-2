@@ -4,7 +4,7 @@ Transform:
 
 Globals:
   Function:
-    Runtime: nodejs8.10
+    Runtime: nodejs12.x
     Timeout: 120
     MemorySize: 512
     Environment:
@@ -15,17 +15,77 @@ Resources:
   FaceSearchApi:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: # TODO: Add handler
-      CodeUri: # TODO: Add CodeUri
+      Handler: api/lambda.handler
+      CodeUri: .
       Environment:
-        # TODO: Add environment variable for S3
+        Variables:
+          S3_BUCKET: !Sub "face-image-bucket-${AWS::AccountId}"
       Policies:
         - AWSLambdaBasicExecutionRole
-        # TODO: Add more policies
+        - S3CrudPolicy:
+            BucketName: !Sub "face-image-bucket-${AWS::AccountId}"
+        - RekognitionReadPolicy:
+            CollectionId: skooldio
+        - RekognitionWriteOnlyAccessPolicy:
+            CollectionId: skooldio
       Events:
-        # TODO: Add events
+        FaceGetEvent:
+          Type: Api
+          Properties:
+            Path: /face
+            Method: get
+        FacePostEvent:
+          Type: Api
+          Properties:
+            Path: /face
+            Method: post
+        UploadPreSign:
+          Type: Api
+          Properties:
+            Path: /upload
+            Method: get
+  FaceDetectS3:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: s3/lambda.handler
+      CodeUri: .
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - S3CrudPolicy:
+            BucketName: !Sub "face-image-bucket-${AWS::AccountId}"
+        - RekognitionDetectOnlyPolicy: {}
+      Events:
+        S3ObjectCreateEvent:
+          Type: S3
+          Properties:
+            Bucket:
+              Ref: FaceImageBucket
+            Events:
+              - 's3:ObjectCreated:*'
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: suffix
+                    Value: .jpg
+      EventInvokeConfig:
+        MaximumRetryAttempts: 0
+        DestinationConfig:
+          # SQS and SNS will get auto-created if the Destination property is not specified or is AWS::NoValue
+          OnSuccess:
+            Type: SNS
+          OnFailure: 
+            Type: SNS
   FaceImageBucket:
     Type: AWS::S3::Bucket
     Properties:
       # Need to specify bucket name to avoid circular dependency. See https://aws.amazon.com/blogs/infrastructure-and-automation/handling-circular-dependency-errors-in-aws-cloudformation/
       BucketName: !Sub "face-image-bucket-${AWS::AccountId}"
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: 
+              - "*"
+            AllowedMethods: 
+              - "PUT"
+              - "GET"
+            AllowedOrigins: 
+              - "*"

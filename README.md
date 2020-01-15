@@ -41,11 +41,11 @@ $ npm install
 $ node api/local.js
 ```
 
-Before you can index or search faces, you will need an S3 bucket to store face images. You can use existing one or create a new one. 
+Create S3 bucket to store face image and change default S3 bucket config in ```api/app.js``` accordingly.
 
-Use postman collection and environment files in `/postman` to test your API.
+Open ```client/index.html``` to test your API through web client.
 
-## Workshop: API
+## Workshop 1 - API
 * Create a Lambda handler for Express.js by using a lib [aws-serverless-express](https://github.com/awslabs/aws-serverless-express).
   * Put the handler in a file ```api/lambda.js``` 
 * Modify `template.yml` by adding a Lambda function and S3 resources. We can pass S3 bucket name as an env variable to function. For references, see
@@ -54,14 +54,19 @@ Use postman collection and environment files in `/postman` to test your API.
     * [SAM Template Specification](https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md)
   * You will need to give appropriate permissions to your Lambda to interact with other AWS resources by specifying policies. See [Lambda Managed Policies](https://docs.aws.amazon.com/lambda/latest/dg/lambda-intro-execution-role.html) and [SAM Policy templates](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html). You will at least need `AWSLambdaBasicExecutionRole` so your Lambda can upload logs to CloudWatch.
 * Deploy using commands in [section](#deploy-using-aws-cloudformation) below. Once your stack has been created, find your endpoint of API Gateway in the AWS Console to start testing your API.
+* Clean up your Rekognition collection before testing since it might contain images in your old bucket.
+```
+$ aws rekognition delete-collection --collection-id skooldio
+$ aws rekognition create-collection --collection-id skooldio
+```
+* Update ```API_HOST``` in ```client/client.js``` and use ```client/index.html``` to test your API.
 
-## Workshop: S3
+## Workshop 2 - S3 trigger
 The js code for S3 event processing is in `/s3`
-* Modify `s3/test.js` to test the feature locally by running command
-```
-$ node s3/test.js
-```
-* Create a Lambda handler and modify `template.yml` based on [example](https://github.com/awslabs/serverless-application-model/tree/master/examples/apps/s3-get-object)
+* Create a Lambda handler `s3/handler.js` and modify `template.yml` based on [example](https://github.com/awslabs/serverless-application-model/tree/develop/examples/2016-10-31/s3_processor)
+
+## Workshop 3 - Lambda destinations
+* Modify `template.yml` to include Lambda event config and destinations based on [example](https://github.com/awslabs/serverless-application-model/tree/develop/examples/2016-10-31/function_lambda_event_destinations)
 
 ## Deploy using AWS Cloudformation
 First, you will need an S3 bucket for AWS Cloudformation to upload your code for deployment. To create a bucket, run following command with your own unique bucket name.
