@@ -17,15 +17,18 @@ Mac
 $ export AWS_DEFAULT_PROFILE=yourprofile
 ``` 
 
-
 ## Create a new Face collection
 We will need to create a new face colleciton named `skooldio` in Rekognition service. Run a command
 ```shell
 $ aws rekognition create-collection --collection-id skooldio
 ```
 
+## Clone git repo
+* Fork this repo to your account
+* Run ```git clone <your git URL>``` to clone your repo to local.
+
 ## Run locally
-By default, AWS SDK for Javascript will use credentials from your AWS CLI. You can set `AWS_PROFILE` env variable to use a particular profile in your credential.
+* By default, AWS SDK for Javascript will use credentials from your AWS CLI. You can set `AWS_PROFILE` env variable to use a particular profile in your credential.
 ```shell
 Windows
 C:\> setx AWS_PROFILE yourprofile
@@ -33,17 +36,24 @@ C:\> setx AWS_PROFILE yourprofile
 Mac
 $ export AWS_PROFILE=yourprofile
 ``` 
-
-Then run following commands to start Express.js server on http://localhost:3001
-
+* Create S3 bucket to store face image. You will need to add following CORS configuation in Permissions tab.
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<CORSConfiguration xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+<CORSRule>
+    <AllowedOrigin>*</AllowedOrigin>
+    <AllowedMethod>PUT</AllowedMethod>
+    <AllowedHeader>*</AllowedHeader>
+</CORSRule>
+</CORSConfiguration>
+```
+* Change default S3 bucket config in ```api/app.js``` accordingly.
+* Run following commands to start Express.js server on http://localhost:3001
 ```shell
 $ npm install
 $ node api/local.js
 ```
-
-Create S3 bucket to store face image and change default S3 bucket config in ```api/app.js``` accordingly.
-
-Open ```client/index.html``` to test your API through web client.
+* Open ```client/index.html``` to test your API through web client. By default, it will connect to your API on localhost. 
 
 ## Workshop 1 - API
 * Create a Lambda handler for Express.js by using a lib [aws-serverless-express](https://github.com/awslabs/aws-serverless-express).
